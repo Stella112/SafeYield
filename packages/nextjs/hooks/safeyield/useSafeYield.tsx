@@ -113,6 +113,7 @@ export const useSafeYield = () => {
     abi,
     functionName: "getPrivateCircle",
     args: [circleId],
+    account: address,
     query: { enabled: false, retry: false },
   });
 
@@ -121,6 +122,7 @@ export const useSafeYield = () => {
     abi,
     functionName: "getPrivatePassport",
     args: [passportId],
+    account: address,
     query: { enabled: false, retry: false },
   });
 
