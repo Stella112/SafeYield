@@ -1,29 +1,36 @@
 # SafeYield
 
-Private RWA yield circles with FHE YieldLock commitments and encrypted agent permissions.
+![SafeYield banner](docs/safeyield-banner.svg)
+
+<p align="center">
+  <img alt="Zama FHEVM" src="https://img.shields.io/badge/Zama-FHEVM-64F3BF?style=for-the-badge">
+  <img alt="Sepolia" src="https://img.shields.io/badge/Live_on-Sepolia-7DD3FC?style=for-the-badge">
+  <img alt="Onchain Finance" src="https://img.shields.io/badge/Track-Onchain_Finance-FBBF24?style=for-the-badge">
+  <img alt="Next.js" src="https://img.shields.io/badge/Frontend-Next.js-FFFFFF?style=for-the-badge">
+  <img alt="Foundry" src="https://img.shields.io/badge/Contracts-Foundry-111827?style=for-the-badge">
+</p>
+
+**Private RWA yield circles with FHE YieldLock commitments and encrypted agent permissions.**
 
 SafeYield lets people, families, and communities privately pool tokenized RWA yield, route future income into real-life commitments, and let AI agents assist only after encrypted permission checks pass.
 
 ## Problem
 
-Real-life financial commitments are often funded from sensitive income streams: rent from a shared asset, family support, school fees, emergency savings, supplier payments, or freelance earnings. Today, proving that a commitment is funded usually means exposing balances, income history, payment amounts, or reliability signals to other people, platforms, or agents.
+Real-life financial commitments are funded from sensitive income streams: rent from a shared property, family support, school fees, emergency savings, supplier payments, or freelance earnings. Today, proving that a commitment is funded usually means exposing balances, income history, payout amounts, or reliability signals.
 
-That creates a privacy gap for ordinary users. Families and communities need financial coordination, but they should not have to reveal every contribution, payout, reserve buffer, or trust score just to prove that a payment plan is real.
+That privacy tradeoff is painful for ordinary people. Families and communities need financial coordination, but they should not have to reveal every contribution, reserve buffer, trust score, or agent fee just to prove that a payment plan is real.
 
 ## Solution
 
-SafeYield uses Zama FHE to let users compute over private income and yield data while keeping the underlying numbers encrypted. A user can create a private income pool, set aside future yield for a real-life commitment, route funds through a private waterfall, and generate selective proof signals without exposing the actual amounts.
+SafeYield uses Zama FHE so users can compute over private income and yield data while the actual numbers stay encrypted.
 
-AI helpers are permissioned instead of trusted by default. Before an agent can help with a task, SafeYield checks an encrypted Agent Permission Passport: fee paid, requested fee, agent score, task type, and pool safety. The agent only acts when the encrypted checks pass.
+- **Create a private income pool:** deposit into a shared RWA or future-income pool without exposing member balances.
+- **Lock yield for real commitments:** route future income toward rent, school fees, family support, emergency savings, supplier payments, or reinvestment.
+- **Approve AI helpers privately:** agents can only act after encrypted checks confirm fee limits, task type, agent score, and pool safety.
 
-## Deployment
+## Core Primitive: YieldLock
 
-- Network: Sepolia
-- SafeYield contract: `0xb892c20480FE14607ba8780B8768A9eA3f8611bC`
-
-## Core Primitive
-
-**YieldLock** turns private future yield or income into encrypted commitments for family support, rent, school fees, emergency reserves, freelancer payouts, or reinvestment.
+**YieldLock** turns private future yield or income into encrypted commitments for real-life obligations.
 
 The contract computes over encrypted values:
 
@@ -36,6 +43,39 @@ The contract computes over encrypted values:
 - CircleScore
 - agent x402 fee, fee cap, score, solvency, and permission result
 
+## Architecture
+
+```mermaid
+flowchart LR
+  User["User or family pool member"] --> UI["SafeYield Next.js app"]
+  UI --> Encrypt["Zama client-side encryption"]
+  Encrypt --> Contract["SafeYield FHEVM contract on Sepolia"]
+  Contract --> YieldLock["Encrypted YieldLock waterfall"]
+  Contract --> Passport["Encrypted Agent Permission Passport"]
+  YieldLock --> Proofs["Selective proof badges"]
+  Passport --> Agent["AI helper can act only if allowed"]
+  Proofs --> User
+  Agent --> User
+```
+
+## Tech Stack
+
+- **Smart contracts:** Solidity, Zama FHEVM, Foundry
+- **Frontend:** Next.js, React, Tailwind CSS, RainbowKit, Wagmi, Viem
+- **Encryption SDK:** `@zama-fhe/react-sdk`, `@zama-fhe/sdk`
+- **Network:** Sepolia
+
+## Deployment
+
+- **Network:** Sepolia
+- **SafeYield contract:** `0xb892c20480FE14607ba8780B8768A9eA3f8611bC`
+
+## Hackathon Tracks Targeted
+
+**Zama Developer Program - Onchain Finance**
+
+SafeYield directly targets confidential finance by using FHE to compute private yield allocations, reserves, commitments, user scores, and agent permissions without revealing the underlying financial data.
+
 ## Demo Flow
 
 1. Create a Private Yield Circle.
@@ -44,16 +84,7 @@ The contract computes over encrypted values:
 4. Execute YieldLock.
 5. Reveal selective proofs such as commitment active, yield eligible, and agent allowed.
 
-## Project Layout
-
-- `packages/foundry/src/SafeYield.sol` - FHEVM contract.
-- `packages/foundry/test/SafeYield.t.sol` - starter contract tests.
-- `packages/foundry/script/DeploySafeYield.s.sol` - deployment script.
-- `packages/nextjs/components/SafeYieldConsole.tsx` - working demo UI.
-- `packages/nextjs/hooks/safeyield/useSafeYield.tsx` - onchain hook scaffold for the next wiring pass.
-- `packages/nextjs/contracts/SafeYield.ts` - frontend ABI/deployment binding.
-
-## Commands
+## Quick Start
 
 ```bash
 pnpm install
@@ -63,4 +94,34 @@ pnpm next:check-types
 pnpm start
 ```
 
-The current demo server runs at `http://localhost:3001`.
+The local demo runs at:
+
+```text
+http://localhost:3001
+```
+
+Create `.env.local` from `.env.example`:
+
+```bash
+cp .env.example .env.local
+```
+
+Required values:
+
+```env
+SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+DEPLOYER_PRIVATE_KEY=
+NEXT_PUBLIC_SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=
+```
+
+Use a burner wallet for deployment and testing.
+
+## Project Layout
+
+- `packages/foundry/src/SafeYield.sol` - FHEVM contract.
+- `packages/foundry/test/SafeYield.t.sol` - contract tests.
+- `packages/foundry/script/DeploySafeYield.s.sol` - deployment script.
+- `packages/nextjs/components/SafeYieldConsole.tsx` - working demo UI.
+- `packages/nextjs/hooks/safeyield/useSafeYield.tsx` - encrypted onchain interaction hook.
+- `packages/nextjs/contracts/SafeYield.ts` - frontend ABI/deployment binding.
