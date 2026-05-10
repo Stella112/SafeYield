@@ -246,6 +246,15 @@ function SafeYieldRuntime() {
   const [waterfallForm, setWaterfallForm] = useState(waterfallDefaults);
   const [agentForm, setAgentForm] = useState(agentDefaults);
 
+  useEffect(() => {
+    setWaterfallForm(previous =>
+      previous.circleId === safeYield.activeCircleId ? previous : { ...previous, circleId: safeYield.activeCircleId },
+    );
+    setAgentForm(previous =>
+      previous.circleId === safeYield.activeCircleId ? previous : { ...previous, circleId: safeYield.activeCircleId },
+    );
+  }, [safeYield.activeCircleId]);
+
   const publicCircle = safeYield.publicCircle as readonly [string, string, number] | undefined;
   const contractStatus = safeYield.hasContract ? "Ready" : `Needs ${SAFEYIELD_CHAIN_NAME} contract`;
   const needsWallet = !safeYield.isConnected;

@@ -171,7 +171,11 @@ export const useSafeYield = () => {
       if (!publicClient) return;
       setMessage(`${label} submitted. Waiting for confirmation...`);
       const receipt = await publicClient.waitForTransactionReceipt({ hash });
-      if (receipt.status !== "success") throw new Error(`${label} reverted onchain.`);
+      if (receipt.status !== "success") {
+        throw new Error(
+          `${label} reverted onchain. Check that the form is using the active pool id and that the pool is not already locked.`,
+        );
+      }
     },
     [publicClient],
   );
