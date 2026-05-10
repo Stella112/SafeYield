@@ -74,6 +74,7 @@ export const useSafeYield = () => {
   const [circleHandles, setCircleHandles] = useState<CircleHandles | undefined>();
   const [passportHandles, setPassportHandles] = useState<PassportHandles | undefined>();
   const [decryptEnabled, setDecryptEnabled] = useState(false);
+  const [passportReadable, setPassportReadable] = useState(false);
 
   const deployedAddress = deployment?.address as string | undefined;
   const hasContract = Boolean(
@@ -323,6 +324,7 @@ export const useSafeYield = () => {
         });
         await waitForSuccess(hash, "Agent passport");
         setActivePassportId(targetPassport.toString());
+        setPassportReadable(true);
         setMessage(`Agent passport ${targetPassport.toString()} submitted.`);
         refresh();
       } catch (error) {
@@ -395,6 +397,10 @@ export const useSafeYield = () => {
 
   const readPrivatePassport = useCallback(async () => {
     if (!hasContract || !contractAddress || !abi) return;
+    if (!passportReadable) {
+      setMessage("Ask for helper approval first. Only the wallet that submitted that helper can read its proof.");
+      return;
+    }
     try {
       setMessage("Reading encrypted passport handles...");
       const result = await privatePassportRead.refetch();
@@ -405,7 +411,7 @@ export const useSafeYield = () => {
     } catch (error) {
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }, [abi, contractAddress, hasContract, privatePassportRead]);
+  }, [abi, contractAddress, hasContract, passportReadable, privatePassportRead]);
 
   const decryptLoadedHandles = useCallback(() => {
     if (!contractAddress || decryptTargets.length === 0) {
@@ -448,6 +454,7 @@ export const useSafeYield = () => {
     isDecrypting: decrypt.isFetching,
     circleHandles,
     passportHandles,
+    passportReadable,
     decrypted: decrypt.data ?? {},
   };
 };

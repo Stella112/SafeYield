@@ -653,8 +653,13 @@ function SafeYieldRuntime() {
                   </button>
                   <button
                     className={secondaryButton}
-                    disabled={actionDisabled}
+                    disabled={actionDisabled || !safeYield.passportReadable}
                     onClick={() => runAction(safeYield.readPrivatePassport)}
+                    title={
+                      safeYield.passportReadable
+                        ? "Load the encrypted helper proof"
+                        : "Ask for helper approval first with this wallet"
+                    }
                   >
                     <MagnifyingGlassIcon className="h-5 w-5" />
                     Helper
