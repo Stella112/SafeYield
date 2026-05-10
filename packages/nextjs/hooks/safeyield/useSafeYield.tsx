@@ -108,24 +108,6 @@ export const useSafeYield = () => {
     query: { enabled: Boolean(hasContract && isConnected && circleId > 0n), refetchOnWindowFocus: false, retry: false },
   });
 
-  const privateCircleRead = useReadContract({
-    address: hasContract ? contractAddress : undefined,
-    abi,
-    functionName: "getPrivateCircle",
-    args: [circleId],
-    account: address,
-    query: { enabled: false, retry: false },
-  });
-
-  const privatePassportRead = useReadContract({
-    address: hasContract ? contractAddress : undefined,
-    abi,
-    functionName: "getPrivatePassport",
-    args: [passportId],
-    account: address,
-    query: { enabled: false, retry: false },
-  });
-
   const decryptTargets = useMemo(() => {
     const targets: Array<{ handle: `0x${string}`; contractAddress: `0x${string}` }> = [];
     if (contractAddress && circleHandles) {
@@ -384,36 +366,48 @@ export const useSafeYield = () => {
   ]);
 
   const readPrivateCircle = useCallback(async () => {
-    if (!hasContract || !contractAddress || !abi) return;
+    if (!hasContract || !contractAddress || !abi || !address || !publicClient) return;
     try {
-      setMessage("Reading encrypted circle handles...");
-      const result = await privateCircleRead.refetch();
-      if (result.error) throw result.error;
-      if (!result.data) throw new Error("No circle handles returned.");
-      setCircleHandles(result.data as CircleHandles);
-      setMessage("Circle handles loaded.");
+      const targetCircle = asBig(activeCircleId, circleId);
+      setMessage(`Reading encrypted circle ${targetCircle.toString()} handles...`);
+      const result = await publicClient.readContract({
+        address: contractAddress,
+        abi,
+        functionName: "getPrivateCircle",
+        args: [targetCircle],
+        account: address,
+      });
+      if (!result) throw new Error("No circle handles returned.");
+      setCircleHandles(result as CircleHandles);
+      setMessage(`Circle ${targetCircle.toString()} handles loaded.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }, [abi, contractAddress, hasContract, privateCircleRead]);
+  }, [abi, activeCircleId, address, circleId, contractAddress, hasContract, publicClient]);
 
   const readPrivatePassport = useCallback(async () => {
-    if (!hasContract || !contractAddress || !abi) return;
+    if (!hasContract || !contractAddress || !abi || !address || !publicClient) return;
     if (!passportReadable) {
       setMessage("Ask for helper approval first. Only the wallet that submitted that helper can read its proof.");
       return;
     }
     try {
-      setMessage("Reading encrypted passport handles...");
-      const result = await privatePassportRead.refetch();
-      if (result.error) throw result.error;
-      if (!result.data) throw new Error("No passport handles returned.");
-      setPassportHandles(result.data as PassportHandles);
-      setMessage("Passport handles loaded.");
+      const targetPassport = asBig(activePassportId, passportId);
+      setMessage(`Reading encrypted helper ${targetPassport.toString()} handles...`);
+      const result = await publicClient.readContract({
+        address: contractAddress,
+        abi,
+        functionName: "getPrivatePassport",
+        args: [targetPassport],
+        account: address,
+      });
+      if (!result) throw new Error("No passport handles returned.");
+      setPassportHandles(result as PassportHandles);
+      setMessage(`Helper ${targetPassport.toString()} handles loaded.`);
     } catch (error) {
       setMessage(error instanceof Error ? error.message : String(error));
     }
-  }, [abi, contractAddress, hasContract, passportReadable, privatePassportRead]);
+  }, [abi, activePassportId, address, contractAddress, hasContract, passportId, passportReadable, publicClient]);
 
   const decryptLoadedHandles = useCallback(() => {
     if (!contractAddress || decryptTargets.length === 0) {
