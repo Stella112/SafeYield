@@ -1,0 +1,35 @@
+#!/usr/bin/env node
+
+const fs = require("fs");
+
+const args = process.argv.slice(2);
+const raw = args[0] === "-r";
+const query = raw ? args[1] : args[0];
+const file = raw ? args[2] : args[1];
+
+if (!query || !file) {
+  process.exit(2);
+}
+
+const data = JSON.parse(fs.readFileSync(file, "utf8"));
+
+function readPath(path) {
+  return path
+    .split(".")
+    .filter(Boolean)
+    .reduce((value, key) => (value == null ? undefined : value[key]), data);
+}
+
+const options = query.split("//").map(part => part.trim());
+let value;
+for (const option of options) {
+  value = readPath(option);
+  if (value !== undefined && value !== null) break;
+}
+
+if (value === undefined || value === null) {
+  process.exit(1);
+}
+
+process.stdout.write(typeof value === "string" ? value : JSON.stringify(value));
+process.stdout.write("\n");
